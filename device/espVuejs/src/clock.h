@@ -16,9 +16,9 @@ ESP8266WebServer httpServer(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
 // hàm getSeconds có lỗi.
-uint32_t mySeconds;
-uint32_t myMinutes;
-uint32_t myHours;
+volatile uint32_t mySeconds;
+volatile uint32_t myMinutes;
+volatile uint32_t myHours;
 WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 volatile bool stopTick = false;
@@ -53,7 +53,7 @@ void setup()
 
     timeClient.begin();
     ws2812fx.setMode(FX_MODE_CHASE_RAINBOW);
-    while (millis()<30000)
+    while (millis() < 30000)
     {
         ws2812fx.service();
     }
@@ -61,13 +61,16 @@ void setup()
     {
         delay(500);
         ws2812fx.service();
-        if(millis()> 180000)
+        if (millis() > 180000)
             break;
     }
-    if(timeClient.update())
+    if (timeClient.update())
+    {
         ws2812fx.setSegment(0, 0, LED_COUNT - 1, FX_MODE_CUSTOM, RED, 0);
+        uint32_t _color[3] = {0x090900, 0x000505, 0};
+        ws2812fx.setSegment(1, 0, LED_COUNT - 1, FX_MODE_BREATH, _color, 1000);
+    }
     timeClient.end();
-    
 
     Serial.println(timeClient.getFormattedTime());
     mySeconds = timeClient.getSeconds();
@@ -88,18 +91,6 @@ void loop()
     if (!stopTick)
     {
         ws2812fx.service();
-        // if (lastHous != timeClient.getHours()) {
-        //   lastHous = timeClient.getHours();
-        //   if (lastHous > 0 && lastHous < 6) {
-        //     ws2812fx.setBrightness(64);
-        //   }
-        //   else if (lastHous < 16) {
-        //     ws2812fx.setBrightness(255);
-        //   }
-        //   else {
-        //     ws2812fx.setBrightness(128);
-        //   }
-        // }
         if (millis() - timer > 1000)
         {
             timer = millis();
@@ -124,7 +115,14 @@ uint16_t myCustomEffect(void)
     WS2812FX::Segment_runtime *segrt = ws2812fx.getSegmentRuntime();
 
     static uint32_t lastSeconds = 0;
+    static uint32_t lastMinutes = 0;
+
     static uint32_t maxCounter = 0;
+
+    static uint32_t lastSecondsPosition = 0;
+    static uint32_t lastMinutesPosition = 0;
+    static uint32_t lastHoursPosition = 0;
+
     if (mySeconds != lastSeconds)
     {
         maxCounter = segrt->counter_mode_call;
@@ -135,13 +133,19 @@ uint16_t myCustomEffect(void)
 
     uint16_t length = seg->stop - seg->start + 1;
 
-    ws2812fx.clear();
+    // ws2812fx.clear();
+    for (uint16_t i = 0; i < length; i++)
+    {
+        if (i == lastSecondsPosition || i == lastMinutesPosition || i == lastHoursPosition)
+            ws2812fx.setPixelColor(i, 0);
+    }
     for (uint16_t i = 0; i < length; i++)
     {
         int16_t hoursPosition = calcHours(myHours);
-        if ((hoursPosition == 59 + calcMins(myMinutes) -i) 
-        ){
+        if ((i == 59 - (hoursPosition + calcMins(myMinutes))))
+        {
             ws2812fx.setPixelColor(i, BLUE);
+            lastHoursPosition = i;
         }
         if (i == 59 - myMinutes)
         {
@@ -153,6 +157,7 @@ uint16_t myCustomEffect(void)
                 ws2812fx.setPixelColor(i, ws2812fx.color_blend(colors, BLUE, 128));
             else
                 ws2812fx.setPixelColor(i, ws2812fx.color_blend(colors, ws2812fx.getPixelColor(i), 128));
+            lastMinutesPosition = i;
         }
         if (i == 59 - mySeconds)
         {
@@ -168,6 +173,8 @@ uint16_t myCustomEffect(void)
             if (ws2812fx.getPixelColor(i) != 0)
                 color = ws2812fx.color_blend(color, ws2812fx.getPixelColor(i), 64);
             ws2812fx.setPixelColor(i, color);
+            lastSecondsPosition = i;
+
             //      ws2812fx.setPixelColor(calcIndex(i + 1), ws2812fx.color_blend(colors[1], ws2812fx.getPixelColor(calcIndex(i + 1)), 64));
         }
     }
@@ -216,8 +223,8 @@ int16_t calcHours(int16_t hours)
         ret = hours - 12;
     }
     ret = hours;
-    ret = hours*5;
-    if(ret >= 60)
+    ret = hours * 5;
+    if (ret >= 60)
     {
         ret = ret - 60;
     }
@@ -226,7 +233,7 @@ int16_t calcHours(int16_t hours)
 int16_t calcMins(int16_t mins)
 {
     int16_t ret;
-    ret = mins/12;
+    ret = mins / 12;
     return ret;
 }
 
