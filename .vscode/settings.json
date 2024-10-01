@@ -1,5 +1,9 @@
 {
     "files.associations": {
+        "*.ejs": "html",
+        "*.pug": "jade",
+        "*.css": "css",
+        "*.html": "html",
         "algorithm": "cpp",
         "array": "cpp",
         "deque": "cpp",
@@ -11,7 +15,8 @@
         "initializer_list": "cpp",
         "ranges": "cpp",
         "random": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "chrono": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

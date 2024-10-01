@@ -6,8 +6,6 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <WS2812FX.h>
 
-#define LED_PIN D1   // digital pin used to drive the LED strip
-#define LED_COUNT 60 // number of LEDs on the strip
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7 * 3600);
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
