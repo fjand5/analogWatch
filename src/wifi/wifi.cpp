@@ -1,6 +1,25 @@
 #include "wifi.h"
 
 IPAddress apIP(4, 3, 2, 1); // 172.217.28.1
+String apSSID;
+String apPSK;
+String staSSID;
+String staPSK;
+void updateWifi()
+{
+  LittleFS.begin();
+
+  File wifiSetupFile;
+  wifiSetupFile = LittleFS.open("/wifiSetup.json", "w");
+  JsonDocument doc;
+  JsonObject wifiSetupJson = doc.to<JsonObject>();
+  wifiSetupJson["STASSID"] = staSSID;
+  wifiSetupJson["STAPSK"] = staPSK;
+  wifiSetupJson["APSSID"] = apSSID;
+  wifiSetupJson["APPSK"] = apPSK;
+  serializeJson(doc, wifiSetupFile);
+  wifiSetupFile.close();
+}
 
 String scanWifi()
 {
@@ -69,16 +88,18 @@ String scanWifi()
 //   }
 //   server.send(200, "application/json", server.arg(0));
 // }
-// void getWifi()
-// {
-//   DynamicJsonDocument doc(256);
-//   JsonObject obj = doc.to<JsonObject>();
-//   obj["wifi"] = getValue("_ssid");
-//   obj["ip"] = WiFi.localIP().toString();
-//   String ret;
-//   serializeJson(obj, ret);
-//   server.send(200, "application/json", ret);
-// }
+String getWifi()
+{
+  JsonDocument doc;
+  JsonObject wifiSetupJson = doc.to<JsonObject>();
+  wifiSetupJson["STASSID"] = staSSID;
+  wifiSetupJson["STAPSK"] = staPSK;
+  wifiSetupJson["APSSID"] = apSSID;
+  wifiSetupJson["APPSK"] = apPSK;
+  String ret;
+  serializeJson(wifiSetupJson, ret);
+  return ret;
+}
 void setupWifi(void)
 {
   LittleFS.begin();
@@ -89,7 +110,7 @@ void setupWifi(void)
   if (!LittleFS.exists("/wifiSetup.json"))
   {
     wifiSetupFile = LittleFS.open("/wifiSetup.json", "w");
-    wifiSetupFile.print(DEFAULT_AP);
+    wifiSetupFile.print(DEFAULT_SETUP_WIFI);
     wifiSetupFile.close();
   }
 
@@ -98,21 +119,26 @@ void setupWifi(void)
   wifiSetupFile = LittleFS.open("/wifiSetup.json", "r");
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, wifiSetupFile);
-  JsonObject wifiSetupJson = doc.as<JsonObject>();
-  if (err)
+  if (err != DeserializationError::Ok)
   {
-    deserializeJson(doc, DEFAULT_AP);
+    deserializeJson(doc, DEFAULT_SETUP_WIFI);
   }
+  JsonObject wifiSetupJson = doc.as<JsonObject>();
+  apSSID = wifiSetupJson["APSSID"].as<String>();
+  apPSK = wifiSetupJson["APPSK"].as<String>();
 
-  WiFi.softAP(
-      wifiSetupJson["APSSID"].as<String>() + String("-") + String(ESP.getChipId()),
-      wifiSetupJson["APPSK"].as<String>());
+  WiFi.softAP(apSSID + String("-") + String(ESP.getChipId()), apPSK);
+  if (wifiSetupJson["STASSID"].is<String>() && wifiSetupJson["STAPSK"].is<String>())
+  {
 
-  if (wifiSetupJson.containsKey("STASSID") && wifiSetupJson.containsKey("STAPSK"))
-    WiFi.begin(wifiSetupJson["STASSID"].as<String>(), wifiSetupJson["STAPSK"].as<String>());
+    staSSID = wifiSetupJson["STASSID"].as<String>();
+    staPSK = wifiSetupJson["STAPSK"].as<String>();
+    WiFi.begin(staSSID, staPSK);
+  }
+#ifdef DEVELOPMENT
   else
     WiFi.begin(DEFAULT_STASSID, DEFAULT_STAPSK);
-
+#endif
   wifiSetupFile.close();
 
   addHttpApi("/ip",
@@ -125,9 +151,30 @@ void setupWifi(void)
              {
                server->send(200, "application/json", scanWifi());
              });
+  addHttpApi("/getWifi",
+             [](ESP8266WebServer *server)
+             {
+               server->send(200, "application/json", getWifi());
+             });
+  addHttpApi("/setWifi",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+
+               obj["oldValue"] = getWifi();
+               apSSID = server->hasArg("apSSID") ? server->arg("apSSID") : apSSID;
+               apPSK = server->hasArg("apPSK") ? server->arg("apPSK") : apPSK;
+               staSSID = server->hasArg("staSSID") ? server->arg("staSSID") : staSSID;
+               staPSK = server->hasArg("staPSK") ? server->arg("staPSK") : staPSK;
+               updateWifi();
+               obj["newValue"] = getWifi();
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
 }
 
 void loopWifi(void)
 {
-  // Serial.println(WiFi.status())
 }

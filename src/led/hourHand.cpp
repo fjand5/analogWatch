@@ -2,7 +2,6 @@
 
 CRGB hourLayer[LED_COUNT];
 
-
 int16_t calcHours(int16_t hours)
 {
     int16_t ret;
@@ -18,13 +17,19 @@ int16_t calcHours(int16_t hours)
     }
     return ret;
 }
-
-CRGB *hourHandHandHandle(CRGB color, uint8_t hour)
+int16_t calcMinute(int16_t minute)
 {
-  memset(hourLayer, CRGB::Black, sizeof(hourLayer));
+    int16_t ret;
+    ret = minute / 12;
+    return ret;
+}
 
-  uint8_t currentHourIndex = LED_COUNT - calcHours(hour) - 1;
+CRGB *hourHandHandHandle(CRGB color, uint8_t hour, uint8_t minute)
+{
+    memset(hourLayer, CRGB::Black, sizeof(hourLayer));
 
-  hourLayer[currentHourIndex] = color;
-  return hourLayer;
+    uint8_t currentHourIndex = LED_COUNT - calcHours(hour) - calcMinute(minute) - 1;
+
+    hourLayer[currentHourIndex] = color;
+    return hourLayer;
 };
