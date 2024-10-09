@@ -96,6 +96,7 @@ String getWifi()
   wifiSetupJson["STAPSK"] = staPSK;
   wifiSetupJson["APSSID"] = apSSID;
   wifiSetupJson["APPSK"] = apPSK;
+  wifiSetupJson["ip"] = WiFi.localIP().toString();
   String ret;
   serializeJson(wifiSetupJson, ret);
   return ret;
@@ -141,11 +142,6 @@ void setupWifi(void)
 #endif
   wifiSetupFile.close();
 
-  addHttpApi("/ip",
-             [](ESP8266WebServer *server)
-             {
-               server->send(200, "text/html", WiFi.localIP().toString());
-             });
   addHttpApi("/scanWifi",
              [](ESP8266WebServer *server)
              {

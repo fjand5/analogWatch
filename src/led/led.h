@@ -10,5 +10,6 @@
 #include "LittleFS.h"
 #include "RTClib.h"
 
+void preSetupLed();
 void setupLed();
 void loopLed();

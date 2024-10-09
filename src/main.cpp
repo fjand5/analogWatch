@@ -3,7 +3,7 @@
 #include "led/led.h"
 void setup(void)
 {
-
+  preSetupLed();
   setupWifi();
   setupWebserver();
   setupLed();
@@ -14,6 +14,13 @@ void setup(void)
                LittleFS.begin();
                LittleFS.format();
                server->send(200, "application/json", "ok");
+             });
+
+  addHttpApi("/reset",
+             [](ESP8266WebServer *server)
+             {
+               server->send(200, "application/json", "ok");
+               ESP.restart();
              });
   addHttpApi("/readFile",
              [](ESP8266WebServer *server)

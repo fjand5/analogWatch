@@ -16,7 +16,9 @@
         "ranges": "cpp",
         "random": "cpp",
         "limits": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "*.tcc": "cpp",
+        "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -1,18 +1,7 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import wifi from './modules/wifi'
-import mqtt from './modules/mqtt'
-import system from './modules/system'
-import command from './modules/command'
-
-Vue.use(Vuex)
-
-const store = new Vuex.Store({
-    modules: [
-        wifi,
-        mqtt,
-        system,
-        command
-    ]
-})
-export default store
+// import { createStore } from 'vuex'
+export  {default as useMessageStore} from './message';
+export  {default as useCommandStore} from './command';
+export  {default as useDisplayStore} from './display';
+export  {default as useLedStore} from './led';
+export  {default as useWifiStore} from './wifi';
+export  {default as useBackgroundStore} from './background';

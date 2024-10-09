@@ -3,7 +3,7 @@
 
 #define DAT_PIN 14
 
-// #define CLK_PIN 13
+#define CLK_PIN 13
 
 #define DS1307_SDA 4
 #define DS1307_CLK 5

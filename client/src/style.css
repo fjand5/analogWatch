@@ -1,0 +1,225 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+ /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+}
+}
+@layer base {
+  html {
+    @apply text-dark-500;
+  }
+  .palette{
+    @apply after:animate-gradient  relative after:rounded-full after:absolute after:content-[''] after:h-2 after:-bottom-2 after:left-0 after:right-0;
+  }
+  .palette:after{
+    background-size: 200%;
+  }
+  .palette-cloud:after{
+    /* animation: gradient 2s ease infinite; */
+    background-image: linear-gradient(
+      to right,
+      Blue,
+      DarkBlue,
+      DarkBlue,
+      DarkBlue,
+      DarkBlue,
+      DarkBlue,
+      DarkBlue,
+      DarkBlue,
+      Blue,
+      DarkBlue,
+      SkyBlue,
+      SkyBlue,
+      LightBlue,
+      White,
+      LightBlue,
+      SkyBlue
+    );
+  }
+  .palette-lava:after {
+    background-image: linear-gradient(
+      to right,
+      Black,
+      Maroon,
+      Black,
+      Maroon,
+      DarkRed,
+      Maroon,
+      DarkRed,
+      DarkRed,
+      DarkRed,
+      Red,
+      Orange,
+      White,
+      Orange,
+      Red,
+      DarkRed
+    );
+  }
+  .palette-ocean:after {
+    background-image: linear-gradient(
+      to right,
+      MidnightBlue,
+      DarkBlue,
+      MidnightBlue,
+      Navy,
+      DarkBlue,
+      MediumBlue,
+      SeaGreen,
+      Teal,
+      CadetBlue,
+      Blue,
+      DarkCyan,
+      CornflowerBlue,
+      Aquamarine,
+      SeaGreen,
+      Aqua,
+      LightSkyBlue
+    );
+  }
+  .palette-forest:after {
+    background-image: linear-gradient(
+      to right,
+      DarkGreen,
+      DarkGreen,
+      DarkOliveGreen,
+      DarkGreen,
+      Green,
+      ForestGreen,
+      OliveDrab,
+      Green,
+      SeaGreen,
+      MediumAquamarine,
+      LimeGreen,
+      YellowGreen,
+      LightGreen,
+      LawnGreen,
+      MediumAquamarine,
+      ForestGreen
+    );
+  }
+  .palette-rainbow:after {
+    background-image: linear-gradient(
+      to right,
+      #ff0000,
+      #d52a00,
+      #ab5500,
+      #ab7f00,
+      #abab00,
+      #56d500,
+      #00ff00,
+      #00d52a,
+      #00ab55,
+      #0056aa,
+      #0000ff,
+      #2a00d5,
+      #5500ab,
+      #7f0081,
+      #ab0055,
+      #d5002b
+    );
+  }
+  .palette-rainbow-stripe:after {
+    background-image: linear-gradient(
+      to right,
+      #ff0000,
+      #000000,
+      #ab5500,
+      #000000,
+      #abab00,
+      #000000,
+      #00ff00,
+      #000000,
+      #00ab55,
+      #000000,
+      #0000ff,
+      #000000,
+      #5500ab,
+      #000000,
+      #ab0055,
+      #000000
+    );
+  }
+  .palette-party:after {
+    background-image: linear-gradient(
+      to right,
+      #5500ab,
+      #84007c,
+      #b5004b,
+      #e5001b,
+      #e81700,
+      #b84700,
+      #ab7700,
+      #abab00,
+      #ab5500,
+      #dd2200,
+      #f2000e,
+      #c2003e,
+      #8f0071,
+      #5f00a1,
+      #2f00d0,
+      #0007f9
+    );
+  }
+
+  .palette-heat:after {
+    background-image: linear-gradient(
+      to right,
+      #000000,
+      #330000,
+      #660000,
+      #990000,
+      #cc0000,
+      #ff0000,
+      #ff3300,
+      #ff6600,
+      #ff9900,
+      #ffcc00,
+      #ffff00,
+      #ffff33,
+      #ffff66,
+      #ffff99,
+      #ffffcc,
+      #ffffff
+    );
+  }
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.bounce-enter-active {
+  animation: bounce-in 0.8s;
+}
+
+.bounce-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

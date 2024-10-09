@@ -47,11 +47,14 @@ void setupWebserver()
              {
               server->sendHeader("Content-Encoding", "gzip");
               server->send(200, "application/javascript", app_js, app_js_length); });
-  ;
-  server->on("/fonts/element-icons.woff", []()
+  server->on("/css/index.css", []()
              {
               server->sendHeader("Content-Encoding", "gzip");
-              server->send(200, "application/javascript", font_woff, font_woff_length); });
+              server->send(200, "text/css", index_css, index_css_length); });
+  // server->on("/fonts/element-icons.woff", []()
+  //            {
+  //             server->sendHeader("Content-Encoding", "gzip");
+  //             server->send(200, "application/javascript", font_woff, font_woff_length); });
   server->on("/static/favicon.ico", []()
              {
               server->sendHeader("Content-Encoding", "gzip");

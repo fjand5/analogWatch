@@ -10,6 +10,9 @@ CRGB secondHandColor = CRGB::Red;
 CRGB minuteHandColor = CRGB::Green;
 CRGB hourHandColor = CRGB::Blue;
 uint8_t brightness = 255;
+uint8_t currentBrightness = 0;
+bool power = true;
+bool autoSyncTime = true;
 
 TwoWire I2Cone;
 RTC_DS1307 ds1307Time;
@@ -57,6 +60,7 @@ void updateLed()
   setupLedJson["minuteHandColor"] = rgbToHex(minuteHandColor);
   setupLedJson["hourHandColor"] = rgbToHex(hourHandColor);
   setupLedJson["brightness"] = brightness;
+  setupLedJson["autoSyncTime"] = autoSyncTime;
   serializeJson(doc, setupLedFile);
   setupLedFile.close();
 }
@@ -68,6 +72,9 @@ String getLed()
   setupLedJson["minuteHandColor"] = rgbToHex(minuteHandColor);
   setupLedJson["hourHandColor"] = rgbToHex(hourHandColor);
   setupLedJson["brightness"] = brightness;
+  setupLedJson["power"] = power;
+  setupLedJson["timeStamp"] = espTime.now().unixtime();
+  setupLedJson["autoSyncTime"] = autoSyncTime;
   String ret;
   serializeJson(setupLedJson, ret);
   return ret;
@@ -103,17 +110,27 @@ void loadSetupLed()
   minuteHandColor = hexToRGB(setupLedJson["minuteHandColor"]);
   hourHandColor = hexToRGB(setupLedJson["hourHandColor"]);
   brightness = setupLedJson["brightness"].as<uint8_t>();
+  autoSyncTime = setupLedJson["autoSyncTime"].as<boolean>();
   setupLedFile.close();
 }
-
-void setupLed()
+void preSetupLed()
 {
 
   FastLED.clear();
   FastLED.addLeds<NEOPIXEL, DAT_PIN>(leds, LED_COUNT);
+  for (size_t i = 0; i < LED_COUNT; i++)
+  {
+    leds[i] = CRGB(random8(), random8(), random8());
+  }
+  FastLED.show(127);
+};
+
+void setupLed()
+{
+
   loadSetupLed();
   int8_t res = WiFi.waitForConnectResult(15000);
-  if (res == WL_CONNECTED)
+  if (autoSyncTime && res == WL_CONNECTED)
   {
     timeClient.begin();
     for (size_t i = 0; i < 3; i++)
@@ -136,7 +153,7 @@ void setupLed()
   if (!ds1307Time.isrunning())
     ds1307Time.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-  if (timeClient.isTimeSet())
+  if (autoSyncTime && timeClient.isTimeSet())
   {
     // Nếu lấy được thời gian từ internet thì cập nhật cho cả ds1307 luôn
     espTime.begin(DateTime(timeClient.getEpochTime()));
@@ -150,16 +167,26 @@ void setupLed()
     else
       espTime.begin(DateTime(0, 0, 0, 0, 0, 0));
   }
-  timeClient.end();
+  if (autoSyncTime)
+    timeClient.end();
 
 // Lấy thời gian xong thì tắt sta wifi
 #ifndef DEVELOPMENT
   WiFi.mode(WIFI_AP);
 #endif
-  addHttpApi("/getFormattedTime",
+  addHttpApi("/setAutoSyncTime",
              [](ESP8266WebServer *server)
              {
-               server->send(200, "text/html", timeClient.getFormattedTime());
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = autoSyncTime;
+               autoSyncTime = value == "true";
+               updateLed();
+               obj["newValue"] = autoSyncTime;
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
              });
   addHttpApi("/setSecondHandColor",
              [](ESP8266WebServer *server)
@@ -214,7 +241,7 @@ void setupLed()
 
                TimeSpan offset(0, 7, 0, 0);
                espTime.adjust(DateTime(value.toInt()) + offset);
-               ds1307Time.adjust(DateTime(timeClient.getEpochTime()));
+               ds1307Time.adjust(espTime.now());
 
                obj["newValue"] = espTime.now().unixtime();
                String ret;
@@ -231,6 +258,20 @@ void setupLed()
                brightness = value.toInt();
                updateLed();
                obj["newValue"] = brightness;
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setPower",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = power;
+               power = value == "true";
+               updateLed();
+               obj["newValue"] = power;
                String ret;
                serializeJson(obj, ret);
                server->send(200, "application/json", ret.c_str());
@@ -316,6 +357,14 @@ void loopLed()
       )
         leds[i] = secondLayer[i] / 3 + minuteLayer[i] / 3 + hourLayer[i] / 3;
     }
-    FastLED.show(brightness);
+    if (currentBrightness < brightness)
+      currentBrightness++;
+    if (currentBrightness > brightness)
+      currentBrightness--;
+
+    if (power)
+      FastLED.show(currentBrightness);
+    else
+      FastLED.show(0);
   }
 }
