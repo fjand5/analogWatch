@@ -101,7 +101,7 @@ String getWifi()
   serializeJson(wifiSetupJson, ret);
   return ret;
 }
-void setupWifi(void)
+void setupWifi(bool isValid)
 {
   LittleFS.begin();
 
@@ -127,8 +127,11 @@ void setupWifi(void)
   JsonObject wifiSetupJson = doc.as<JsonObject>();
   apSSID = wifiSetupJson["APSSID"].as<String>();
   apPSK = wifiSetupJson["APPSK"].as<String>();
+  if (isValid)
+    WiFi.softAP(apSSID, apPSK);
+  else
+    WiFi.softAP(String("analog watch -") + String(WiFi.macAddress()), apPSK);
 
-  WiFi.softAP(apSSID + String("-") + String(ESP.getChipId()), apPSK);
   if (wifiSetupJson["STASSID"].is<String>() && wifiSetupJson["STAPSK"].is<String>())
   {
 

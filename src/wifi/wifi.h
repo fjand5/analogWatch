@@ -10,6 +10,6 @@
 // void setWifi();
 // void getWifi();
 
-void setupWifi(void);
+void setupWifi(bool isValid);
 
 void loopWifi(void);

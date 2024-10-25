@@ -43,14 +43,48 @@ void setupWebserver()
     return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE; });
   }
   server->on("/", handleIndex);
-  server->on("/js/app.js", []()
+  server->on("/js/app.js", HTTP_GET,
+             []()
              {
-              server->sendHeader("Content-Encoding", "gzip");
-              server->send(200, "application/javascript", app_js, app_js_length); });
-  server->on("/css/index.css", []()
+               server->sendHeader("Content-Encoding", "gzip");
+               server->setContentLength(app_js_length);
+               server->send(200, "application/javascript", "");
+               uint32_t remain = app_js_length;
+               while (remain > 0)
+               {
+                 server->sendContent_P(app_js + app_js_length - remain, min(uint32_t(5000), remain));
+                 remain -= min(uint32_t(5000), remain);
+                 // Nghỉ một chút để ổn định nguồn.
+                 delay(200);
+               }
+
+               server->client().stop();
+             });
+  server->on("/css/index.css", HTTP_GET,
+             []()
              {
-              server->sendHeader("Content-Encoding", "gzip");
-              server->send(200, "text/css", index_css, index_css_length); });
+               server->sendHeader("Content-Encoding", "gzip");
+               server->setContentLength(index_css_length);
+               server->send(200, "text/css", "");
+               uint32_t remain = index_css_length;
+               while (remain > 0)
+               {
+                 server->sendContent_P(index_css + index_css_length - remain, min(uint32_t(5000), remain));
+                 remain -= min(uint32_t(1000), remain);
+                 // Nghỉ một chút để ổn định nguồn.
+                 delay(200);
+               }
+
+               server->client().stop();
+             });
+  // server->on("/js/app.js", []()
+  //            {
+  //             server->sendHeader("Content-Encoding", "gzip");
+  //             server->send(200, "application/javascript", app_js, app_js_length); });
+  // server->on("/css/index.css", []()
+  //            {
+  //             server->sendHeader("Content-Encoding", "gzip");
+  //             server->send(200, "text/css", index_css, index_css_length); });
   // server->on("/fonts/element-icons.woff", []()
   //            {
   //             server->sendHeader("Content-Encoding", "gzip");

@@ -118,11 +118,30 @@ void preSetupLed()
 
   FastLED.clear();
   FastLED.addLeds<NEOPIXEL, DAT_PIN>(leds, LED_COUNT);
-  for (size_t i = 0; i < LED_COUNT; i++)
+  for (size_t c = 0; c < LED_COUNT; c++)
   {
-    leds[i] = CRGB(random8(), random8(), random8());
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Red;
+    FastLED.show(255);
+    delay(10);
   }
-  FastLED.show(127);
+  for (size_t c = 0; c < LED_COUNT; c++)
+  {
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Green;
+
+    FastLED.show(255);
+    delay(10);
+  }
+  for (size_t c = 0; c < LED_COUNT; c++)
+  {
+
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Blue;
+
+    FastLED.show(255);
+    delay(10);
+  }
 };
 
 void setupLed()

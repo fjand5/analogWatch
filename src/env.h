@@ -1,5 +1,9 @@
 
-#define DEVELOPMENT
+
+// Hai thông số mac lấy từ đường dẫn "/calcCode"
+#define MAC_ADDRESS 3995263.00
+#define MAC_ADDRESS_SQRT 1998.82
+// #define DEVELOPMENT
 
 #define DAT_PIN 14
 
@@ -14,5 +18,5 @@
 #define DEFAULT_STASSID "Vong Cat 3"
 #define DEFAULT_STAPSK "78787878"
 
-#define DEFAULT_SETUP_WIFI "{\n\"APSSID\": \"analog watch\",\n\"APPSK\": \"123123123\"\n}"
+#define DEFAULT_SETUP_WIFI "{\n\"APSSID\": \"led du go\",\n\"APPSK\": \"123123123\"\n}"
 #define DEFAULT_SETUP_LED "{\n\"secondHandColor\": \"#ff0000\",\n\"hourHandColor\": \"#0000ff\",\n\"brightness\": 200,\n\"minuteHandColor\": \"#00ff00\"\n}"
