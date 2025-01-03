@@ -34,23 +34,6 @@ void setRoute()
                file.close();
              });
 
-  // addHttpApi("/calcCode",
-  //            [](ESP8266WebServer *server)
-  //            {
-  //              uint8_t mac[6];
-  //              wifi_get_macaddr(STATION_IF, mac);
-  //              double macEncode = 0;
-  //              for (size_t i = 0; i < 6; i++)
-  //              {
-  //                macEncode += mac[i];
-  //              }
-  //              macEncode += ESP.getChipId();
-
-  //              String ret = String("#define MAC_ADDRESS ");
-  //              ret += macEncode;
-  //              ret += String("\n#define MAC_ADDRESS_SQRT ") + String(sqrt(macEncode));
-  //              server->send(200, "application/json", ret.c_str());
-  //            });
   addHttpApi("/ad6ae84ce89ac046d242b7462c8912873056ffbb87ded9124a269351bbfaf575",
              [](ESP8266WebServer *server)
              {
@@ -97,7 +80,27 @@ void setup(void)
 {
   LittleFS.begin();
   isValid = valid();
-  preSetupLed();
+  pinMode(LED_BUILTIN, OUTPUT);
+  for (size_t i = 0; i < 5; i++)
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(222);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(222);
+  }
+
+  pinMode(BUTTON_PIN, INPUT);
+  if (digitalRead(BUTTON_PIN) == LOW)
+  {
+    setupWifi(isValid, false);
+    setupWebserver();
+    while (1)
+    {
+      loopWebserver();
+    }
+  }
+
+  setupWifi(isValid, true);
 
 #ifdef DEVELOPMENT
   if (true)
@@ -106,20 +109,20 @@ void setup(void)
 #endif
   {
     // Nếu valid
-    setupWifi(isValid);
+
     setupWebserver();
+    preSetupLed();
     setupLed();
     setRoute();
   }
   else
   {
-    setupWifi(isValid);
+
     setupWebserver();
     setRoute();
 
     while (1)
     {
-      loopWifi();
       loopWebserver();
     }
   }
@@ -127,7 +130,6 @@ void setup(void)
 
 void loop(void)
 {
-  loopWifi();
   loopWebserver();
   loopLed();
 

@@ -3,6 +3,7 @@
 #include "secondHand.h"
 #include "minuteHand.h"
 #include "hourHand.h"
+#include "matrixPanel.h"
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 #include <ArduinoJson.h>

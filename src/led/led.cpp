@@ -4,7 +4,6 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7 * 3600);
 
 CRGB leds[LED_COUNT];
-uint16_t numLeds = LED_COUNT;
 
 CRGB secondHandColor = CRGB::Red;
 CRGB minuteHandColor = CRGB::Green;
@@ -18,6 +17,8 @@ TwoWire I2Cone;
 RTC_DS1307 ds1307Time;
 
 RTC_Millis espTime;
+
+MatrixPanel *matrixPanel;
 CRGB hexToRGB(String hex)
 {
   hex.toLowerCase();
@@ -79,14 +80,14 @@ String getLed()
   serializeJson(setupLedJson, ret);
   return ret;
 }
-void waitLed()
-{
-  for (size_t i = 0; i < LED_COUNT; i++)
-  {
-    leds[i] = CRGB(random8(), random8(), random8());
-  }
-  FastLED.show(127);
-}
+// void waitLed()
+// {
+// for (size_t i = 0; i < LED_COUNT; i++)
+// {
+//   leds[i] = CRGB(random8(), random8(), random8());
+// }
+// FastLED.show(127);
+// }
 void loadSetupLed()
 {
 
@@ -118,29 +119,52 @@ void preSetupLed()
 
   FastLED.clear();
   FastLED.addLeds<NEOPIXEL, DAT_PIN>(leds, LED_COUNT);
-  for (size_t c = 0; c < LED_COUNT; c++)
+  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+
+  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  {
+    leds[c] = CRGB::Red;
+  }
+  FastLED.show(255);
+  delay(500);
+  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  {
+    leds[c] = CRGB::Green;
+  }
+  FastLED.show(255);
+  delay(500);
+
+  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  {
+
+    leds[c] = CRGB::Blue;
+  }
+  FastLED.show(255);
+  delay(500);
+
+  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Red;
     FastLED.show(255);
-    delay(10);
+    delay(2);
   }
-  for (size_t c = 0; c < LED_COUNT; c++)
+  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Green;
-
     FastLED.show(255);
-    delay(10);
+    delay(2);
   }
-  for (size_t c = 0; c < LED_COUNT; c++)
+  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
   {
 
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Blue;
-
     FastLED.show(255);
-    delay(10);
+    delay(2);
   }
 };
 
@@ -156,7 +180,7 @@ void setupLed()
     {
       if (timeClient.forceUpdate())
         break;
-      waitLed();
+      // waitLed();
     }
   }
   I2Cone.begin(DS1307_SDA, DS1307_CLK);
@@ -166,7 +190,7 @@ void setupLed()
     {
       break;
     }
-    delay(1000);
+    delay(555);
   }
   ds1307Time.begin();
   if (!ds1307Time.isrunning())
@@ -306,84 +330,100 @@ void setupLed()
                String s = ds1307Time.isrunning() ? "y" : "n";
                server->send(200, "application/json", String(ds1307Time.now().hour()) + "-" + String(ds1307Time.now().minute()) + "-" + String(ds1307Time.now().second()) + "  " + s);
              });
+
+  matrixPanel = new MatrixPanel(MATRIX_PANEL_WIDTH, MATRIX_PANEL_HEIGHT);
+}
+CRGB *handleRingClock(CRGB *secondLayer, CRGB *minuteLayer, CRGB *hourLayer)
+{
+
+  static CRGB ringClockLayer[RING_CLOCK_LEDS];
+  for (size_t i = 0; i < RING_CLOCK_LEDS; i++)
+  {
+    ringClockLayer[i] = CRGB::Black;
+    if (
+        secondLayer[i] == CRGB::Black &&
+        minuteLayer[i] == CRGB::Black &&
+        hourLayer[i] == CRGB::Black
+
+    )
+      continue;
+    if (
+        secondLayer[i] != CRGB::Black &&
+        minuteLayer[i] == CRGB::Black &&
+        hourLayer[i] == CRGB::Black
+
+    )
+      ringClockLayer[i] = secondLayer[i];
+    if (
+        secondLayer[i] == CRGB::Black &&
+        minuteLayer[i] != CRGB::Black &&
+        hourLayer[i] == CRGB::Black
+
+    )
+      ringClockLayer[i] = minuteLayer[i];
+    if (
+        secondLayer[i] == CRGB::Black &&
+        minuteLayer[i] == CRGB::Black &&
+        hourLayer[i] != CRGB::Black
+
+    )
+      ringClockLayer[i] = hourLayer[i];
+    if (
+        secondLayer[i] != CRGB::Black &&
+        minuteLayer[i] != CRGB::Black &&
+        hourLayer[i] == CRGB::Black
+
+    )
+      ringClockLayer[i] = secondLayer[i] / 2 + minuteLayer[i] / 2;
+    if (
+        secondLayer[i] != CRGB::Black &&
+        minuteLayer[i] == CRGB::Black &&
+        hourLayer[i] != CRGB::Black
+
+    )
+      ringClockLayer[i] = secondLayer[i] / 2 + hourLayer[i] / 2;
+    if (
+        secondLayer[i] == CRGB::Black &&
+        minuteLayer[i] != CRGB::Black &&
+        hourLayer[i] != CRGB::Black
+
+    )
+      ringClockLayer[i] = minuteLayer[i] / 2 + hourLayer[i] / 2;
+    if (
+        secondLayer[i] != CRGB::Black &&
+        minuteLayer[i] != CRGB::Black &&
+        hourLayer[i] != CRGB::Black
+
+    )
+      ringClockLayer[i] = secondLayer[i] / 3 + minuteLayer[i] / 3 + hourLayer[i] / 3;
+  }
+  return ringClockLayer;
 }
 void loopLed()
 {
-  static uint32_t timer = millis();
-  if (millis() - timer > TICK_MS)
+  static uint32_t ledTimer = millis();
+  static uint32_t step = 0;
+  if (millis() - ledTimer > TICK_MS)
   {
-    timer = millis();
+    ledTimer = millis();
+    step++;
     CRGB *secondLayer = secondHandHandle(secondHandColor, espTime.now().second());
-    CRGB *minuteLayer = minuteHandHandHandle(minuteHandColor, espTime.now().minute());
-    CRGB *hourLayer = hourHandHandHandle(hourHandColor, espTime.now().hour(), espTime.now().minute());
-    for (size_t i = 0; i < LED_COUNT; i++)
-    {
-      leds[i] = CRGB::Black;
-      if (
-          secondLayer[i] == CRGB::Black &&
-          minuteLayer[i] == CRGB::Black &&
-          hourLayer[i] == CRGB::Black
+    CRGB *minuteLayer = minuteHandHandle(minuteHandColor, espTime.now().minute());
+    CRGB *hourLayer = hourHandHandle(hourHandColor, espTime.now().hour(), espTime.now().minute());
+    CRGB *ringClockLayer = handleRingClock(secondLayer, minuteLayer, hourLayer);
+    CRGB *matrixPanelLayer = matrixPanel->matrixPanelHandle(espTime.now());
+    memcpy(leds, matrixPanelLayer, sizeof(CRGB) * MATRIX_PANEL_LEDS);
+    memcpy(leds + MATRIX_PANEL_LEDS, ringClockLayer, sizeof(CRGB) * RING_CLOCK_LEDS);
 
-      )
-        continue;
-      if (
-          secondLayer[i] != CRGB::Black &&
-          minuteLayer[i] == CRGB::Black &&
-          hourLayer[i] == CRGB::Black
-
-      )
-        leds[i] = secondLayer[i];
-      if (
-          secondLayer[i] == CRGB::Black &&
-          minuteLayer[i] != CRGB::Black &&
-          hourLayer[i] == CRGB::Black
-
-      )
-        leds[i] = minuteLayer[i];
-      if (
-          secondLayer[i] == CRGB::Black &&
-          minuteLayer[i] == CRGB::Black &&
-          hourLayer[i] != CRGB::Black
-
-      )
-        leds[i] = hourLayer[i];
-      if (
-          secondLayer[i] != CRGB::Black &&
-          minuteLayer[i] != CRGB::Black &&
-          hourLayer[i] == CRGB::Black
-
-      )
-        leds[i] = secondLayer[i] / 2 + minuteLayer[i] / 2;
-      if (
-          secondLayer[i] != CRGB::Black &&
-          minuteLayer[i] == CRGB::Black &&
-          hourLayer[i] != CRGB::Black
-
-      )
-        leds[i] = secondLayer[i] / 2 + hourLayer[i] / 2;
-      if (
-          secondLayer[i] == CRGB::Black &&
-          minuteLayer[i] != CRGB::Black &&
-          hourLayer[i] != CRGB::Black
-
-      )
-        leds[i] = minuteLayer[i] / 2 + hourLayer[i] / 2;
-      if (
-          secondLayer[i] != CRGB::Black &&
-          minuteLayer[i] != CRGB::Black &&
-          hourLayer[i] != CRGB::Black
-
-      )
-        leds[i] = secondLayer[i] / 3 + minuteLayer[i] / 3 + hourLayer[i] / 3;
-    }
+    // show leds
     if (currentBrightness < brightness)
       currentBrightness++;
     if (currentBrightness > brightness)
       currentBrightness--;
-
     if (power)
       FastLED.show(currentBrightness);
     else
       FastLED.show(0);
   }
+  delay(11);
 }

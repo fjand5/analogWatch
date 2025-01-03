@@ -1,6 +1,6 @@
 #include "hourHand.h"
 
-CRGB hourLayer[LED_COUNT];
+CRGB hourLayer[RING_CLOCK_LEDS];
 
 int16_t calcHours(int16_t hours)
 {
@@ -24,11 +24,11 @@ int16_t calcMinute(int16_t minute)
     return ret;
 }
 
-CRGB *hourHandHandHandle(CRGB color, uint8_t hour, uint8_t minute)
+CRGB *hourHandHandle(CRGB color, uint8_t hour, uint8_t minute)
 {
     memset(hourLayer, CRGB::Black, sizeof(hourLayer));
 
-    uint8_t currentHourIndex = LED_COUNT - calcHours(hour) - calcMinute(minute) - 1;
+    uint8_t currentHourIndex = RING_CLOCK_LEDS - calcHours(hour) - calcMinute(minute) - 1;
 
     hourLayer[currentHourIndex] = color;
     return hourLayer;

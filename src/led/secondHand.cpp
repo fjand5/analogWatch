@@ -1,7 +1,7 @@
 #define FADE_EVERY_TICK 255 / (1000 / TICK_MS)
 #include "secondHand.h"
 
-CRGB secondLayer[LED_COUNT];
+CRGB secondLayer[RING_CLOCK_LEDS];
 uint8_t lastSecond = 0;
 CRGB currentColor;
 CRGB nextColor;
@@ -10,8 +10,8 @@ CRGB *secondHandHandle(CRGB color, uint8_t second)
 {
   memset(secondLayer, CRGB::Black, sizeof(secondLayer));
 
-  uint8_t currentSecondIndex = LED_COUNT - second - 1;
-  uint8_t nextSecondIndex = (second + 1) > 59 ? LED_COUNT - 1 : LED_COUNT - (second + 1) - 1;
+  uint8_t currentSecondIndex = RING_CLOCK_LEDS - second - 1;
+  uint8_t nextSecondIndex = (second + 1) > 59 ? RING_CLOCK_LEDS - 1 : RING_CLOCK_LEDS - (second + 1) - 1;
 
   if (second != lastSecond)
   {

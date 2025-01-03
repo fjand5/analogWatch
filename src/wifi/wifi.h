@@ -5,11 +5,10 @@
 #include "../webserver/webserver.h"
 #include "LittleFS.h"
 
-
 // void scanWifi();
 // void setWifi();
 // void getWifi();
 
-void setupWifi(bool isValid);
+void setupWifi(bool isValid, bool sta = true);
 
 void loopWifi(void);

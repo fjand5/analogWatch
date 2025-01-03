@@ -1,11 +1,11 @@
 #include "minuteHand.h"
 
-CRGB minuteLayer[LED_COUNT];
-CRGB *minuteHandHandHandle(CRGB color, uint8_t minute)
+CRGB minuteLayer[RING_CLOCK_LEDS];
+CRGB *minuteHandHandle(CRGB color, uint8_t minute)
 {
   memset(minuteLayer, CRGB::Black, sizeof(minuteLayer));
 
-  uint8_t currentMinuteIndex = LED_COUNT - minute - 1;
+  uint8_t currentMinuteIndex = RING_CLOCK_LEDS - minute - 1;
 
   minuteLayer[currentMinuteIndex] = color;
   return minuteLayer;
