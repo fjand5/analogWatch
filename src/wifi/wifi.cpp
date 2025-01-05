@@ -20,6 +20,11 @@ void updateWifi()
   serializeJson(doc, wifiSetupFile);
   wifiSetupFile.close();
 }
+void setupWifiOnlyAP()
+{
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(DEVICE_NAME, "123123123");
+};
 
 String scanWifi()
 {
@@ -101,7 +106,7 @@ String getWifi()
   serializeJson(wifiSetupJson, ret);
   return ret;
 }
-void setupWifi(bool isValid, bool sta )
+void setupWifi(bool isValid, bool sta)
 {
   LittleFS.begin();
 

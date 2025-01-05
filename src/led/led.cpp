@@ -69,6 +69,7 @@ String getLed()
 {
   JsonDocument doc;
   JsonObject setupLedJson = doc.to<JsonObject>();
+  // AnalogWatch
   setupLedJson["secondHandColor"] = rgbToHex(secondHandColor);
   setupLedJson["minuteHandColor"] = rgbToHex(minuteHandColor);
   setupLedJson["hourHandColor"] = rgbToHex(hourHandColor);
@@ -76,6 +77,14 @@ String getLed()
   setupLedJson["power"] = power;
   setupLedJson["timeStamp"] = espTime.now().unixtime();
   setupLedJson["autoSyncTime"] = autoSyncTime;
+  // Matrixpanel
+  setupLedJson["timeShowTime"] = matrixPanel->getTimeShowTime();
+  setupLedJson["dayShowTime"] = matrixPanel->getDayShowTime();
+  setupLedJson["lunarDayShowTime"] = matrixPanel->getLunarDayShowTime();
+
+  setupLedJson["timeColor"] = rgbToHex(matrixPanel->getTimeColor());
+  setupLedJson["dayColor"] = rgbToHex(matrixPanel->getDayColor());
+  setupLedJson["lunarDayColor"] = rgbToHex(matrixPanel->getLunarDayColor());
   String ret;
   serializeJson(setupLedJson, ret);
   return ret;
@@ -125,14 +134,14 @@ void preSetupLed()
   {
     leds[c] = CRGB::Red;
   }
-  FastLED.show(255);
+  FastLED.show(32);
   delay(500);
   memset(leds, 0, sizeof(CRGB) * LED_COUNT);
   for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
   {
     leds[c] = CRGB::Green;
   }
-  FastLED.show(255);
+  FastLED.show(32);
   delay(500);
 
   memset(leds, 0, sizeof(CRGB) * LED_COUNT);
@@ -141,21 +150,21 @@ void preSetupLed()
 
     leds[c] = CRGB::Blue;
   }
-  FastLED.show(255);
+  FastLED.show(32);
   delay(500);
 
   for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Red;
-    FastLED.show(255);
+    FastLED.show(32);
     delay(2);
   }
   for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Green;
-    FastLED.show(255);
+    FastLED.show(32);
     delay(2);
   }
   for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
@@ -163,7 +172,7 @@ void preSetupLed()
 
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Blue;
-    FastLED.show(255);
+    FastLED.show(32);
     delay(2);
   }
 };
@@ -172,7 +181,19 @@ void setupLed()
 {
 
   loadSetupLed();
-  int8_t res = WiFi.waitForConnectResult(15000);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    static uint8_t index = 0;
+    leds[index] = CRGB::White;
+    FastLED.show(255);
+    delay(100);
+    if (index >= MATRIX_PANEL_LEDS)
+      break;
+    index++;
+  }
+  int8_t res = WiFi.status();
+
   if (autoSyncTime && res == WL_CONNECTED)
   {
     timeClient.begin();
@@ -402,20 +423,20 @@ CRGB *handleRingClock(CRGB *secondLayer, CRGB *minuteLayer, CRGB *hourLayer)
 void loopLed()
 {
   static uint32_t ledTimer = millis();
-  static uint32_t step = 0;
   if (millis() - ledTimer > TICK_MS)
   {
     ledTimer = millis();
-    step++;
     CRGB *secondLayer = secondHandHandle(secondHandColor, espTime.now().second());
     CRGB *minuteLayer = minuteHandHandle(minuteHandColor, espTime.now().minute());
     CRGB *hourLayer = hourHandHandle(hourHandColor, espTime.now().hour(), espTime.now().minute());
     CRGB *ringClockLayer = handleRingClock(secondLayer, minuteLayer, hourLayer);
     CRGB *matrixPanelLayer = matrixPanel->matrixPanelHandle(espTime.now());
+
     memcpy(leds, matrixPanelLayer, sizeof(CRGB) * MATRIX_PANEL_LEDS);
     memcpy(leds + MATRIX_PANEL_LEDS, ringClockLayer, sizeof(CRGB) * RING_CLOCK_LEDS);
 
     // show leds
+
     if (currentBrightness < brightness)
       currentBrightness++;
     if (currentBrightness > brightness)
@@ -425,5 +446,4 @@ void loopLed()
     else
       FastLED.show(0);
   }
-  delay(11);
 }

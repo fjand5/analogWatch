@@ -1,4 +1,7 @@
 #include "matrixPanel.h"
+#include "systemDateTime/systemDateTime.h"
+#include "webserver/webserver.h"
+
 uint8_t step = 0;
 CHSVPalette16 chsvPalette16;
 CRGB scroll(int pos)
@@ -40,13 +43,38 @@ uint16_t rgb888ToRgb565(uint8_t r, uint8_t g, uint8_t b)
 
   return ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
 }
+void MatrixPanel::setTimeColor(CRGB color)
+{
+  _timeColor = color;
+};
+
+void MatrixPanel::setDayColor(CRGB color)
+{
+  _dayColor = color;
+};
+void MatrixPanel::setLunarDayColor(CRGB color)
+{
+  _lunarDayColor = color;
+};
+CRGB MatrixPanel::getTimeColor()
+{
+  return _timeColor;
+};
+CRGB MatrixPanel::getDayColor()
+{
+  return _dayColor;
+};
+CRGB MatrixPanel::getLunarDayColor()
+{
+  return _lunarDayColor;
+};
+
 void MatrixPanel::showTime(DateTime now)
 {
-  CRGB color = CRGB::Chocolate;
+  setTextWrap(false);
 
-  setCursor(0, curentYTime);
-  setTextColor(rgb888ToRgb565(color.r, color.g, color.b), 0);
-
+  setCursor(1, _timeCurentYCursor);
+  setTextColor(rgb888ToRgb565(_timeColor.r, _timeColor.g, _timeColor.b), 0);
   if (now.hour() < 10)
     print("0");
   print(now.hour());
@@ -59,7 +87,78 @@ void MatrixPanel::showTime(DateTime now)
 
   print(now.minute());
 
+  setCursor(1, _dayCurentYCursor);
+  setTextColor(rgb888ToRgb565(_dayColor.r, _dayColor.g, _dayColor.b), 0);
 
+  printf("%02d/%02d", now.day(), now.month());
+
+  setCursor(1, _lunarDayCurentYCursor);
+  setTextColor(rgb888ToRgb565(_lunarDayColor.r, _lunarDayColor.g, _lunarDayColor.b), 0);
+  DaysStruct lunarDayStruct;
+  lunarDayStruct = cvtSun2Lunar(now.day(), now.month(), now.year() - 2000);
+  printf("%02d/%02d", lunarDayStruct.day, lunarDayStruct.month);
+};
+
+CRGB *MatrixPanel::matrixPanelHandle(DateTime now)
+{
+  static uint32_t timer = millis();
+  static uint32_t setShowTimer = millis();
+  static uint32_t nextShowTime = 5000;
+
+  static uint8_t showOffset = 0; // Màn hình bị dư 1 hàng, nên cho xê dịch để tận dụng
+  if (millis() - setShowTimer > nextShowTime)
+  {
+    setShowTimer = millis();
+    showOffset++;
+    if (_show == SHOW_TIME) // Hiển thị thời gian
+    {
+      _show = SHOW_DAY;
+      _timeYCursor = 0 + showOffset % 2;
+      _dayYCursor = -8;
+      _lunarDayYCursor = -8;
+      nextShowTime = _timeShowTime;
+    }
+    else if (_show == SHOW_DAY) // Hiển thị ngày dương
+    {
+      _show = SHOW_LUNAR_DAY;
+      _timeYCursor = -8;
+      _dayYCursor = 0 + showOffset % 2;
+      _lunarDayYCursor = -8;
+      nextShowTime = _dayShowTime;
+    }
+    else if (_show == SHOW_LUNAR_DAY) // Hiển thị ngày âm
+    {
+      _show = SHOW_TIME;
+
+      _timeYCursor = -8;
+      _dayYCursor = -8;
+      _lunarDayYCursor = 0 + showOffset % 2;
+      nextShowTime = _lunarDayShowTime;
+    }
+  }
+  if (millis() - timer > 33)
+  {
+    timer = millis();
+    step++;
+    if (_dayCurentYCursor < _dayYCursor)
+      _dayCurentYCursor++;
+    if (_dayCurentYCursor > _dayYCursor)
+      _dayCurentYCursor--;
+
+    if (_lunarDayCurentYCursor < _lunarDayYCursor)
+      _lunarDayCurentYCursor++;
+    if (_lunarDayCurentYCursor > _lunarDayYCursor)
+      _lunarDayCurentYCursor--;
+
+    if (_timeCurentYCursor < _timeYCursor)
+      _timeCurentYCursor++;
+    if (_timeCurentYCursor > _timeYCursor)
+      _timeCurentYCursor--;
+  }
+  fillScreen(0);
+  showTime(now);
+
+  // xuất ảnh
   for (int16_t x = 0; x < _width; x += 2)
   {
     for (int16_t y = 0; y < _height; y++)
@@ -74,34 +173,6 @@ void MatrixPanel::showTime(DateTime now)
       _matrixLayer[(x + 1) * _height - y - 1] = rgb565Torgb888(getPixel(x, y));
     }
   }
-};
-
-CRGB *MatrixPanel::matrixPanelHandle(DateTime now)
-{
-  static uint32_t timer = millis();
-  // static bool isInit = false;
-  // if (!isInit)
-  // {
-  //   isInit = true;
-
-  //   for (uint16_t i = 0; i < 16; i++)
-  //   {
-  //     chsvPalette16[i].setHue(i * 255 / (16 - 1) + millis() / 8);
-  //     delay(1);
-  //   }
-  // }
-  if (millis() - timer > 100)
-  {
-    timer = millis();
-    step++;
-    curentYTime++;
-    if (curentYTime > 16)
-      curentYTime = 0;
-  }
-  // CHSV hsv(step % 255, 255, 255);
-  // hsv2rgb_rainbow(hsv, color);
-  fillScreen(0);
-  showTime(now);
   return _matrixLayer;
 };
 

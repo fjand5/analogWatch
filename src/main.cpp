@@ -1,3 +1,5 @@
+#include "LittleFS.h"
+
 #include "wifi/wifi.h"
 #include "webserver/webserver.h"
 #include "led/led.h"
@@ -81,24 +83,48 @@ void setup(void)
   LittleFS.begin();
   isValid = valid();
   pinMode(LED_BUILTIN, OUTPUT);
-  for (size_t i = 0; i < 5; i++)
+  // Nháy nhanh 3 lần để báo hiệu khởi động
+  for (size_t i = 0; i < 3; i++)
   {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(222);
+    delay(333);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(222);
+    delay(333);
   }
 
+  uint8_t count = 0;
   pinMode(BUTTON_PIN, INPUT);
-  if (digitalRead(BUTTON_PIN) == LOW)
+  // Nháy nháy chậm để chọn chế độ
+  while (digitalRead(BUTTON_PIN) == LOW)
   {
-    setupWifi(isValid, false);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    delay(500);
+    count++;
+  }
+  // Nếu giữ nút trong khi đèn chớp 10 lần thì format
+  if (count >= 10)
+  {
+    LittleFS.begin();
+    LittleFS.format();
+  }
+  // Nếu giữ nút trong khi đèn chớp 5 lần thì vào chế độ onlyAP
+  if (count >= 5)
+  {
+    setupWifiOnlyAP();
     setupWebserver();
     while (1)
     {
       loopWebserver();
     }
   }
+#ifdef DEVELOPMENT
+Serial.begin(115200);
+delay(1111);
+Serial.println();
+Serial.println();
+Serial.println();
+Serial.println("BOOT....");
+#endif
 
   setupWifi(isValid, true);
 

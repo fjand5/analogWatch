@@ -1,7 +1,11 @@
 
 
 #define DEVELOPMENT
-
+#ifdef DEVELOPMENT
+#define DEVICE_NAME "analog-watch-dev"
+#else
+#define DEVICE_NAME "analog-watch"
+#endif
 #define BUTTON_PIN 0
 
 #define DAT_PIN 14
