@@ -43,7 +43,20 @@ watch(time, async (o, n) => {
 <template>
   <div class="w-full h-full">
     <BaseView label="Hệ thống">
-      <GroupItem label="Cài Đặt Thời Gian">
+      <GroupItem label="Đồng bộ thời gian">
+        <div class="flex items-center w-full px-4">
+          <span class="shrink-0">{{
+            `${autoSyncTime ? "Đang tự " : "Không"} cập nhật thời gian`
+          }}</span>
+          <ToggleItem
+            :model-value="autoSyncTime"
+            v-on:update:model-value="
+              async (v) => await ledStore.setAutoSyncTime(v)
+            "
+          ></ToggleItem>
+        </div>
+      </GroupItem>
+      <GroupItem v-if="autoSyncTime == false" label="Cài Đặt Thời Gian">
         <div class="relative w-full px-4">
           <MenuItem
             @itemClick="
@@ -87,17 +100,6 @@ watch(time, async (o, n) => {
               </div>
             </template>
           </MenuItem>
-        </div>
-      </GroupItem>
-      <GroupItem label="Đồng bộ thời gian">
-        <div class="flex items-center w-full px-4">
-          <span class="shrink-0">{{`${autoSyncTime?'Đang tự ':'Không'} cập nhật thời gian`}}</span>
-          <ToggleItem
-            :model-value="autoSyncTime"
-            v-on:update:model-value="
-              async (v) => await ledStore.setAutoSyncTime(v)
-            "
-          ></ToggleItem>
         </div>
       </GroupItem>
     </BaseView>

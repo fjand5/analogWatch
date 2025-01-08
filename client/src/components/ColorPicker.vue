@@ -77,21 +77,92 @@ const selectWhite = () => {
 </script>
 
 <template>
-  <div class="w-full px-4 flex justify-center gap-2 items-center">
-    <div
-      @click="selectMainColor"
-      class="main-color rounded-full w-full h-4 relative"
-    >
+  <div class="w-full px-4 flex flex-col justify-center gap-2 items-center">
+    <div class="w-full flex justify-center gap-2 items-center">
       <div
-        :style="{
-          left: mainColorPosition * 100 + '%',
-          background: '#' + mainColor,
-        }"
-        class="absolute transition-all shadow-md bottom-[50%] translate-y-[50%] translate-x-[-50%] w-8 h-8 border border-dark-500 rounded-full bg-dark-300 pointer-events-none"
+        @click="selectMainColor"
+        class="main-color rounded-full w-full h-4 relative"
+      >
+        <div
+          :style="{
+            left: mainColorPosition * 100 + '%',
+            background: '#' + mainColor,
+          }"
+          class="absolute transition-all shadow-md bottom-[50%] translate-y-[50%] translate-x-[-50%] w-8 h-8 border border-dark-500 rounded-full bg-dark-300 pointer-events-none"
+        ></div>
+      </div>
+      <div
+        @click="selectWhite"
+        class="w-8 aspect-square border rounded-full bg-white"
       ></div>
     </div>
-    <!-- <div @click="selectWhite" class=" w-8 aspect-square border rounded-full bg-white">
-    </div> -->
+
+    <div class="w-full flex justify-between gap-2 items-center">
+      <div
+        @click="
+          () => {
+            mainColor = 'ff0000';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(255,0,0)]"
+      ></div>
+      <div
+      @click="
+          () => {
+            mainColor = '00ff00';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(0,255,0)]"
+      ></div>
+      <div
+      
+      @click="
+          () => {
+            mainColor = '0000ff';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(0,0,255)]"
+      ></div>
+      <div
+      
+      @click="
+          () => {
+            mainColor = 'ffff00';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(255,255,0)]"
+      ></div>
+      <div
+      
+      @click="
+          () => {
+            mainColor = '00ffff';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(0,255,255)]"
+      ></div>
+      <div
+      
+      @click="
+          () => {
+            mainColor = 'ff00ff';
+            mainColorPosition = -1;
+            emit('update:color', mainColor);
+          }
+        "
+        class="w-8 aspect-square border rounded-full bg-[rgb(255,0,255)]"
+      ></div>
+    </div>
   </div>
 </template>
 

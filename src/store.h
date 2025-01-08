@@ -8,17 +8,20 @@
 #include <list>
 
 typedef void (*OnStoreChange)(String, String, bool);
-std::list < OnStoreChange > OnStoreChanges;
+std::list<OnStoreChange> OnStoreChanges;
 
-void setOnStoreChange(OnStoreChange cb){
+void setOnStoreChange(OnStoreChange cb)
+{
   OnStoreChanges.push_front(cb);
 }
 
-std::map <String, String> Store;
+std::map<String, String> Store;
 
-bool loadConfig() {
+bool loadConfig()
+{
   File configFile = LittleFS.open(STORE_FILE_NAME, "r");
-  if (!configFile) {
+  if (!configFile)
+  {
     Serial.println("Failed to open config file");
     return false;
   }
@@ -36,30 +39,33 @@ bool loadConfig() {
   DynamicJsonDocument doc(10000);
   auto error = deserializeJson(doc, buf.get());
   JsonObject objData;
-  if (error) {
+  if (error)
+  {
     objData = doc.to<JsonObject>();
     Serial.println("Failed to parse config file");
   }
   objData = doc.as<JsonObject>();
-  for (JsonPair kv : objData) {
-      Store[kv.key().c_str()] = kv.value().as<char*>();
+  for (JsonPair kv : objData)
+  {
+    Store[kv.key().c_str()] = kv.value().as<char *>();
   }
   serializeJsonPretty(doc, Serial);
   return true;
 }
 
-bool saveConfig() {
+bool saveConfig()
+{
   DynamicJsonDocument doc(10000);
   JsonObject objData = doc.to<JsonObject>();
 
-  
-  for (auto const& item : Store)
+  for (auto const &item : Store)
   {
     objData[item.first] = item.second;
   }
 
   File configFile = LittleFS.open(STORE_FILE_NAME, "w");
-  if (!configFile) {
+  if (!configFile)
+  {
     Serial.println("Failed to open config file for writing");
     return false;
   }
@@ -67,55 +73,66 @@ bool saveConfig() {
   serializeJson(doc, configFile);
   return true;
 }
-bool checkKey(String key){
+bool checkKey(String key)
+{
   if (Store.find(key) != Store.end())
   {
     return true;
   }
   return false;
 }
-void setValue(String key, String val, bool save = false){
+void setValue(String key, String val, bool save = false)
+{
   bool isChange = Store[key] != val;
   Store[key] = val;
-  if(save)
+  if (save)
     saveConfig();
 
-  
-  for (auto const& item : OnStoreChanges){
-      if(item != NULL)
-          item(key, val, isChange);
+  for (auto const &item : OnStoreChanges)
+  {
+    if (item != NULL)
+      item(key, val, isChange);
   }
-  
 }
 
-String getValue(String key){
-  if(checkKey(key))
+String getValue(String key)
+{
+  if (checkKey(key))
     return Store[key];
   return "";
 }
-const char * getValueByCStr(String key){
+const char *getValueByCStr(String key)
+{
   unsigned int len = Store[key].length();
-  char * ret = new char[len+1]();
-  Store[key].toCharArray(ret, len+1);
+  char *ret = new char[len + 1]();
+  Store[key].toCharArray(ret, len + 1);
   return ret;
 }
-void setupStore() {
+void setupStore()
+{
   Serial.println("");
   delay(1000);
   Serial.println("Mounting FS...");
 
-  if (!LittleFS.begin()) {
+  if (!LittleFS.begin())
+  {
     Serial.println("Failed to mount file system");
+    String valid = getToken();
     LittleFS.format();
+    writeToken(valid);
     Serial.println("Try formatting...");
-    if (!LittleFS.begin()) {
+    if (!LittleFS.begin())
+    {
       return;
     }
   }
   Serial.println("Mounted");
-  if (!loadConfig()) {
+  if (!loadConfig())
+  {
     Serial.println("Failed to load config");
-  } else {
+  }
+  else
+  {
     Serial.println("Config loaded");
   }
 }

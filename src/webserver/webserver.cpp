@@ -89,7 +89,7 @@ void setupWebserver()
   //            {
   //             server->sendHeader("Content-Encoding", "gzip");
   //             server->send(200, "application/javascript", font_woff, font_woff_length); });
-  server->on("/static/favicon.ico", []()
+  server->on("/favicon_ico/favicon.ico", []()
              {
               server->sendHeader("Content-Encoding", "gzip");
               server->send(200, "application/javascript", favicon_ico, favicon_ico_length); });

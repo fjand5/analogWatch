@@ -9,7 +9,18 @@ export default defineStore('led', {
     minuteHandColor: undefined,
     hourHandColor: undefined,
     timeStamp:undefined,
-    autoSyncTime:undefined
+
+
+    timeColor: undefined,
+    dayColor: undefined,
+    lunarDayColor: undefined,
+
+    timeShowTime: undefined,
+    dayShowTime: undefined,
+    lunarDayShowTime: undefined,
+
+    
+    autoSyncTime:undefined,
   }),
   actions: {
     async getLed () {
@@ -21,6 +32,15 @@ export default defineStore('led', {
       this.hourHandColor = res['hourHandColor']
       this.timeStamp = res['timeStamp']
       this.autoSyncTime = res['autoSyncTime']
+
+      // Đồng Hồ Số
+      this.timeColor = res['timeColor']
+      this.dayColor = res['dayColor']
+      this.lunarDayColor = res['lunarDayColor']
+
+      this.timeShowTime = res['timeShowTime']/1000
+      this.dayShowTime = res['dayShowTime']/1000
+      this.lunarDayShowTime = res['lunarDayShowTime']/1000
     },
     async togglePower () {
       const res = await led.setPower(!this.power)
@@ -53,6 +73,30 @@ export default defineStore('led', {
     async setHourHandColor (color) {
       const res = await led.setHourHandColor(color)
       this.hourHandColor = res['newValue']
+    },
+    async setTimeColor (color) {
+      const res = await led.setTimeColor(color)
+      this.timeColor = res['newValue']
+    },
+    async setDayColor (color) {
+      const res = await led.setDayColor(color)
+      this.dayColor = res['newValue']
+    },
+    async setLunarDayColor (color) {
+      const res = await led.setLunarDayColor(color)
+      this.lunarDayColor = res['newValue']
+    },
+    async setTimeShowTime (time) {
+      const res = await led.setTimeShowTime(time*1000)
+      this.timeShowTime = res['newValue']/1000
+    },
+    async setDayShowTime (time) {
+      const res = await led.setDayShowTime(time*1000)
+      this.dayShowTime = res['newValue']/1000
+    },
+    async setLunarDayShowTime (time) {
+      const res = await led.setLunarDayShowTime(time*1000)
+      this.lunarDayShowTime = res['newValue']/1000
     }
   }
 })

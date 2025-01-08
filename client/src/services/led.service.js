@@ -82,6 +82,72 @@ const setHourHandColor = async color => {
   const json = await data.json()
   return json
 }
+const setTimeColor = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setTimeColor?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
+const setDayColor = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setDayColor?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
+const setLunarDayColor = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setLunarDayColor?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
+const setTimeShowTime = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setTimeShowTime?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
+const setDayShowTime = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setDayShowTime?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
+const setLunarDayShowTime = async color => {
+  const data = await fetch(
+    baseUrl +
+      '/setLunarDayShowTime?' +
+      new URLSearchParams({
+        value: color
+      })
+  )
+  const json = await data.json()
+  return json
+}
 export default {
   setPower,
   getLed,
@@ -90,5 +156,12 @@ export default {
   setMinuteHandColor,
   setHourHandColor,
   setDateTime,
-  setAutoSyncTime
+  setAutoSyncTime,
+
+  setTimeColor,
+  setDayColor,
+  setLunarDayColor,
+  setTimeShowTime,
+  setDayShowTime,
+  setLunarDayShowTime
 }

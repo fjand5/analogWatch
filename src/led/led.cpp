@@ -62,6 +62,15 @@ void updateLed()
   setupLedJson["hourHandColor"] = rgbToHex(hourHandColor);
   setupLedJson["brightness"] = brightness;
   setupLedJson["autoSyncTime"] = autoSyncTime;
+
+  // Matrixpanel
+  setupLedJson["timeColor"] = rgbToHex(matrixPanel->getTimeColor());
+  setupLedJson["dayColor"] = rgbToHex(matrixPanel->getDayColor());
+  setupLedJson["lunarDayColor"] = rgbToHex(matrixPanel->getLunarDayColor());
+
+  setupLedJson["timeShowTime"] = matrixPanel->getTimeShowTime();
+  setupLedJson["dayShowTime"] = matrixPanel->getDayShowTime();
+  setupLedJson["lunarDayShowTime"] = matrixPanel->getLunarDayShowTime();
   serializeJson(doc, setupLedFile);
   setupLedFile.close();
 }
@@ -89,14 +98,6 @@ String getLed()
   serializeJson(setupLedJson, ret);
   return ret;
 }
-// void waitLed()
-// {
-// for (size_t i = 0; i < LED_COUNT; i++)
-// {
-//   leds[i] = CRGB(random8(), random8(), random8());
-// }
-// FastLED.show(127);
-// }
 void loadSetupLed()
 {
 
@@ -116,11 +117,22 @@ void loadSetupLed()
   setupLedFile = LittleFS.open("/setupLed.json", "r");
   deserializeJson(doc, setupLedFile);
   JsonObject setupLedJson = doc.as<JsonObject>();
+
   secondHandColor = hexToRGB(setupLedJson["secondHandColor"]);
   minuteHandColor = hexToRGB(setupLedJson["minuteHandColor"]);
   hourHandColor = hexToRGB(setupLedJson["hourHandColor"]);
+
   brightness = setupLedJson["brightness"].as<uint8_t>();
   autoSyncTime = setupLedJson["autoSyncTime"].as<boolean>();
+
+  matrixPanel->setTimeShowTime(setupLedJson["timeShowTime"]);
+  matrixPanel->setDayShowTime(setupLedJson["dayShowTime"]);
+  matrixPanel->setLunarDayShowTime(setupLedJson["lunarDayShowTime"]);
+
+  matrixPanel->setTimeColor(hexToRGB(setupLedJson["timeColor"]));
+  matrixPanel->setDayColor(hexToRGB(setupLedJson["dayColor"]));
+  matrixPanel->setLunarDayColor(hexToRGB(setupLedJson["lunarDayColor"]));
+
   setupLedFile.close();
 }
 void preSetupLed()
@@ -179,15 +191,15 @@ void preSetupLed()
 
 void setupLed()
 {
-
+  matrixPanel = new MatrixPanel(MATRIX_PANEL_WIDTH, MATRIX_PANEL_HEIGHT);
   loadSetupLed();
   while (WiFi.status() != WL_CONNECTED)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-    static uint8_t index = 0;
+    static uint16_t index = 0;
     leds[index] = CRGB::White;
     FastLED.show(255);
-    delay(100);
+    delay(10);
     if (index >= MATRIX_PANEL_LEDS)
       break;
     index++;
@@ -215,8 +227,10 @@ void setupLed()
   }
   ds1307Time.begin();
   if (!ds1307Time.isrunning())
+  {
     ds1307Time.adjust(DateTime(F(__DATE__), F(__TIME__)));
-
+  }else{
+  }
   if (autoSyncTime && timeClient.isTimeSet())
   {
     // Nếu lấy được thời gian từ internet thì cập nhật cho cả ds1307 luôn
@@ -266,6 +280,92 @@ void setupLed()
                serializeJson(obj, ret);
                server->send(200, "application/json", ret.c_str());
              });
+
+  // matrix panel
+  addHttpApi("/setTimeShowTime",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = matrixPanel->getTimeShowTime();
+               matrixPanel->setTimeShowTime(value.toInt());
+               updateLed();
+               obj["newValue"] = matrixPanel->getTimeShowTime();
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setDayShowTime",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = matrixPanel->getDayShowTime();
+               matrixPanel->setDayShowTime(value.toInt());
+               updateLed();
+               obj["newValue"] = matrixPanel->getDayShowTime();
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setLunarDayShowTime",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = matrixPanel->getLunarDayShowTime();
+               matrixPanel->setLunarDayShowTime(value.toInt());
+               updateLed();
+               obj["newValue"] = matrixPanel->getLunarDayShowTime();
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setTimeColor",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = rgbToHex(matrixPanel->getTimeColor());
+               matrixPanel->setTimeColor(hexToRGB(value));
+               updateLed();
+               obj["newValue"] = rgbToHex(matrixPanel->getTimeColor());
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setDayColor",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = rgbToHex(matrixPanel->getDayColor());
+               matrixPanel->setDayColor(hexToRGB(value));
+               updateLed();
+               obj["newValue"] = rgbToHex(matrixPanel->getDayColor());
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
+  addHttpApi("/setLunarDayColor",
+             [](ESP8266WebServer *server)
+             {
+               JsonDocument doc;
+               JsonObject obj = doc.to<JsonObject>();
+               String value = server->arg("value");
+               obj["oldValue"] = rgbToHex(matrixPanel->getLunarDayColor());
+               matrixPanel->setLunarDayColor(hexToRGB(value));
+               updateLed();
+               obj["newValue"] = rgbToHex(matrixPanel->getLunarDayColor());
+               String ret;
+               serializeJson(obj, ret);
+               server->send(200, "application/json", ret.c_str());
+             });
   addHttpApi("/setMinuteHandColor",
              [](ESP8266WebServer *server)
              {
@@ -295,6 +395,7 @@ void setupLed()
                serializeJson(obj, ret);
                server->send(200, "application/json", ret.c_str());
              });
+  // ------------------------------------------
   addHttpApi("/setDateTime",
              [](ESP8266WebServer *server)
              {
@@ -304,8 +405,8 @@ void setupLed()
                obj["oldValue"] = espTime.now().unixtime();
 
                TimeSpan offset(0, 7, 0, 0);
-               espTime.adjust(DateTime(value.toInt()) + offset);
-               ds1307Time.adjust(espTime.now());
+               ds1307Time.adjust(DateTime(value.toInt()) + offset);
+               espTime.adjust(ds1307Time.now());
 
                obj["newValue"] = espTime.now().unixtime();
                String ret;
@@ -352,7 +453,6 @@ void setupLed()
                server->send(200, "application/json", String(ds1307Time.now().hour()) + "-" + String(ds1307Time.now().minute()) + "-" + String(ds1307Time.now().second()) + "  " + s);
              });
 
-  matrixPanel = new MatrixPanel(MATRIX_PANEL_WIDTH, MATRIX_PANEL_HEIGHT);
 }
 CRGB *handleRingClock(CRGB *secondLayer, CRGB *minuteLayer, CRGB *hourLayer)
 {

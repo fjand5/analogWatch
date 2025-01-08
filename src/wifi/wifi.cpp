@@ -106,13 +106,13 @@ String getWifi()
   serializeJson(wifiSetupJson, ret);
   return ret;
 }
-void setupWifi(bool isValid, bool sta)
+void setupWifi()
 {
   LittleFS.begin();
 
   File wifiSetupFile;
 
-  // Nếu chưa thiết lập thông tin thì dung thông số mặc định
+  // Nếu chưa thiết lập thông tin thì dùng thông số mặc định
   if (!LittleFS.exists("/wifiSetup.json"))
   {
     wifiSetupFile = LittleFS.open("/wifiSetup.json", "w");
@@ -120,12 +120,10 @@ void setupWifi(bool isValid, bool sta)
     wifiSetupFile.close();
   }
 
-  if (sta)
-    WiFi.mode(WIFI_AP_STA);
-  else
-    WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
 
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+
   wifiSetupFile = LittleFS.open("/wifiSetup.json", "r");
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, wifiSetupFile);
@@ -136,21 +134,19 @@ void setupWifi(bool isValid, bool sta)
   JsonObject wifiSetupJson = doc.as<JsonObject>();
   apSSID = wifiSetupJson["APSSID"].as<String>();
   apPSK = wifiSetupJson["APPSK"].as<String>();
-  if (isValid)
-    WiFi.softAP(apSSID, apPSK);
-  else
-    WiFi.softAP(String("Du Go - ") + String(WiFi.macAddress()), apPSK);
 
-  if (sta && wifiSetupJson["STASSID"].is<String>() && wifiSetupJson["STAPSK"].is<String>())
+  WiFi.softAP(apSSID, apPSK);
+
+#ifdef DEVELOPMENT
+  WiFi.begin(DEFAULT_STASSID, DEFAULT_STAPSK);
+#else
+  if (wifiSetupJson["STASSID"].is<String>() && wifiSetupJson["STAPSK"].is<String>())
   {
 
     staSSID = wifiSetupJson["STASSID"].as<String>();
     staPSK = wifiSetupJson["STAPSK"].as<String>();
     WiFi.begin(staSSID, staPSK);
   }
-#ifdef DEVELOPMENT
-  else
-    WiFi.begin(DEFAULT_STASSID, DEFAULT_STAPSK);
 #endif
   wifiSetupFile.close();
 

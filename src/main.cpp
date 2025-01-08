@@ -3,15 +3,16 @@
 #include "wifi/wifi.h"
 #include "webserver/webserver.h"
 #include "led/led.h"
-#include "valid.h"
-bool isValid = false;
+#include "valid/valid.h"
 void setRoute()
 {
   addHttpApi("/format",
              [](ESP8266WebServer *server)
              {
                LittleFS.begin();
+               String valid = getToken();
                LittleFS.format();
+               writeToken(valid);
                server->send(200, "application/json", "ok");
              });
 
@@ -81,7 +82,6 @@ void setRoute()
 void setup(void)
 {
   LittleFS.begin();
-  isValid = valid();
   pinMode(LED_BUILTIN, OUTPUT);
   // Nháy nhanh 3 lần để báo hiệu khởi động
   for (size_t i = 0; i < 3; i++)
@@ -105,7 +105,9 @@ void setup(void)
   if (count >= 10)
   {
     LittleFS.begin();
+    String valid = getToken();
     LittleFS.format();
+    writeToken(valid);
   }
   // Nếu giữ nút trong khi đèn chớp 5 lần thì vào chế độ onlyAP
   if (count >= 5)
@@ -118,23 +120,23 @@ void setup(void)
     }
   }
 #ifdef DEVELOPMENT
-Serial.begin(115200);
-delay(1111);
-Serial.println();
-Serial.println();
-Serial.println();
-Serial.println("BOOT....");
+  Serial.begin(115200);
+  delay(1111);
+  Serial.println();
+  Serial.println();
+  Serial.println();
+  Serial.println("BOOT....");
 #endif
-
-  setupWifi(isValid, true);
+  validProcess();
+  setupWifi();
 
 #ifdef DEVELOPMENT
   if (true)
 #else
-  if (isValid)
+  if (valid())
 #endif
   {
-    // Nếu valid
+    // Nếu valid setup tất cả
 
     setupWebserver();
     preSetupLed();
@@ -143,6 +145,7 @@ Serial.println("BOOT....");
   }
   else
   {
+    // Nếu không valid chỉ chạy webserver
 
     setupWebserver();
     setRoute();
@@ -158,18 +161,4 @@ void loop(void)
 {
   loopWebserver();
   loopLed();
-
-#ifndef DEVELOPMENT
-  if (millis() > 60000)
-  {
-    if (!isValid)
-    {
-      while (1)
-      {
-        loopWifi();
-        loopWebserver();
-      }
-    }
-  }
-#endif
 }

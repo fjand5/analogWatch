@@ -9,6 +9,6 @@
 // void setWifi();
 // void getWifi();
 void setupWifiOnlyAP();
-void setupWifi(bool isValid, bool sta = true);
+void setupWifi();
 
 void loopWifi(void);
