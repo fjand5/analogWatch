@@ -142,14 +142,14 @@ void preSetupLed()
   FastLED.addLeds<NEOPIXEL, DAT_PIN>(leds, LED_COUNT);
   memset(leds, 0, sizeof(CRGB) * LED_COUNT);
 
-  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
   {
     leds[c] = CRGB::Red;
   }
   FastLED.show(32);
   delay(500);
   memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
   {
     leds[c] = CRGB::Green;
   }
@@ -157,7 +157,7 @@ void preSetupLed()
   delay(500);
 
   memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-  for (size_t c = 0; c < MATRIX_PANEL_LEDS; c++)
+  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
   {
 
     leds[c] = CRGB::Blue;
@@ -165,21 +165,21 @@ void preSetupLed()
   FastLED.show(32);
   delay(500);
 
-  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Red;
     FastLED.show(32);
     delay(2);
   }
-  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
     leds[c] = CRGB::Green;
     FastLED.show(32);
     delay(2);
   }
-  for (size_t c = MATRIX_PANEL_LEDS; c < LED_COUNT; c++)
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
 
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
@@ -229,7 +229,9 @@ void setupLed()
   if (!ds1307Time.isrunning())
   {
     ds1307Time.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }else{
+  }
+  else
+  {
   }
   if (autoSyncTime && timeClient.isTimeSet())
   {
@@ -452,7 +454,6 @@ void setupLed()
                String s = ds1307Time.isrunning() ? "y" : "n";
                server->send(200, "application/json", String(ds1307Time.now().hour()) + "-" + String(ds1307Time.now().minute()) + "-" + String(ds1307Time.now().second()) + "  " + s);
              });
-
 }
 CRGB *handleRingClock(CRGB *secondLayer, CRGB *minuteLayer, CRGB *hourLayer)
 {
@@ -532,8 +533,8 @@ void loopLed()
     CRGB *ringClockLayer = handleRingClock(secondLayer, minuteLayer, hourLayer);
     CRGB *matrixPanelLayer = matrixPanel->matrixPanelHandle(espTime.now());
 
-    memcpy(leds, matrixPanelLayer, sizeof(CRGB) * MATRIX_PANEL_LEDS);
-    memcpy(leds + MATRIX_PANEL_LEDS, ringClockLayer, sizeof(CRGB) * RING_CLOCK_LEDS);
+    memcpy(leds, ringClockLayer, sizeof(CRGB) * RING_CLOCK_LEDS);
+    memcpy(leds + RING_CLOCK_LEDS, matrixPanelLayer, sizeof(CRGB) * MATRIX_PANEL_LEDS);
 
     // show leds
 
