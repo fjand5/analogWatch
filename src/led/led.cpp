@@ -140,67 +140,61 @@ void preSetupLed()
 
   FastLED.clear();
   FastLED.addLeds<NEOPIXEL, DAT_PIN>(leds, LED_COUNT);
-  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
+  {
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Red;
+    FastLED.show(32);
+  }
+  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
+  {
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Green;
+    FastLED.show(32);
+  }
 
   for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
+  {
+    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+    leds[c] = CRGB::Blue;
+    FastLED.show(32);
+  }
+  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
+
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
     leds[c] = CRGB::Red;
   }
   FastLED.show(32);
-  delay(500);
-  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
+  delay(1000);
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
     leds[c] = CRGB::Green;
   }
   FastLED.show(32);
-  delay(500);
-
-  memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-  for (size_t c = 0; c < RING_CLOCK_LEDS; c++)
+  delay(1000);
+  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
   {
 
     leds[c] = CRGB::Blue;
   }
   FastLED.show(32);
-  delay(500);
-
-  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
-  {
-    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-    leds[c] = CRGB::Red;
-    FastLED.show(32);
-    delay(2);
-  }
-  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
-  {
-    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-    leds[c] = CRGB::Green;
-    FastLED.show(32);
-    delay(2);
-  }
-  for (size_t c = RING_CLOCK_LEDS; c < LED_COUNT; c++)
-  {
-
-    memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-    leds[c] = CRGB::Blue;
-    FastLED.show(32);
-    delay(2);
-  }
+  delay(1000);
 };
 
 void setupLed()
 {
   matrixPanel = new MatrixPanel(MATRIX_PANEL_WIDTH, MATRIX_PANEL_HEIGHT);
   loadSetupLed();
+  uint16_t index = RING_CLOCK_LEDS;
   while (WiFi.status() != WL_CONNECTED)
   {
+    // Chờ đến khi kết nối được hoặc đủ MATRIX_PANEL_LEDS
     memset(leds, 0, sizeof(CRGB) * LED_COUNT);
-    static uint16_t index = 0;
     leds[index] = CRGB::White;
     FastLED.show(255);
     delay(10);
-    if (index >= MATRIX_PANEL_LEDS)
+    if (index >= LED_COUNT)
       break;
     index++;
   }
